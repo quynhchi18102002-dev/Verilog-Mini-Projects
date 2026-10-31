@@ -1,0 +1,75 @@
+`timescale 1ns/1ps
+
+module tb;
+
+  reg [3:0] a, b;
+  reg cin;
+
+  wire [3:0] s_STRU, s_DF, s_BEH;
+  wire cout_STRU, cout_DF, cout_BEH;
+
+  reg [3:0] expected_s;
+  reg expected_c;
+  reg ok;
+
+  integer i, j, k, sum;
+  integer err = 0;
+
+  bcdadd_str u0(a, b, cin, s_STRU, cout_STRU);
+  bcdadd_df  u1(a, b, cin, s_DF, cout_DF);
+  bcdadd_beh u2(a, b, cin, s_BEH, cout_BEH);
+
+  initial begin
+
+    $dumpfile("dump.vcd");
+    $dumpvars(0, tb);
+
+    $display("a b cin | S_STRU S_DF S_BEH | Cout_STRU Cout_DF Cout_BEH | Check");
+
+    for (i = 0; i < 10; i = i + 1) begin
+      for (j = 0; j < 10; j = j + 1) begin
+        for (k = 0; k < 2; k = k + 1) begin
+
+          a = i[3:0];
+          b = j[3:0];
+          cin = k[0];
+
+          sum = i + j + k;
+
+          expected_s = sum % 10;
+          expected_c = sum / 10;
+
+          #10;
+
+          ok = ((s_STRU === expected_s) &&
+                (s_DF === expected_s) &&
+                (s_BEH === expected_s) &&
+                (cout_STRU === expected_c) &&
+                (cout_DF === expected_c) &&
+                (cout_BEH === expected_c));
+
+          if (!ok)
+            err = err + 1;
+
+          if ((i == j) || !ok) begin
+
+            $display("%0d %0d  %b | %b %b %b | %b %b %b | %s",
+                     a, b, cin,
+                     s_STRU, s_DF, s_BEH,
+                     cout_STRU, cout_DF, cout_BEH,
+                     ok ? "PASS" : "FAIL");
+
+          end
+
+        end
+      end
+    end
+
+    $display("Checked 200 input combinations");
+    $display("Errors = %0d", err);
+
+    $finish;
+
+  end
+
+endmodule
