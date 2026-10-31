@@ -1,0 +1,61 @@
+`timescale 1ns/1ps
+
+module tb;
+
+  reg [3:0] b;
+
+  wire [3:0] x_STRU, x_DF, x_BEH;
+  reg [3:0] expected;
+
+  integer i, err = 0;
+
+  bcd2xs3_str u0 (b, x_STRU);
+  bcd2xs3_df  u1 (b, x_DF);
+  bcd2xs3_beh u2 (b, x_BEH);
+
+  initial begin
+
+    $dumpfile("dump.vcd");
+    $dumpvars(0, tb);
+
+    $display("b | x_STRU x_DF x_BEH | Check");
+
+    for (i = 0; i < 16; i = i + 1) begin
+
+      b = i[3:0];
+      #10;
+
+      if (i <= 9) begin
+
+        expected = i + 3;
+
+        if ((x_STRU !== expected) ||
+            (x_DF !== expected) ||
+            (x_BEH !== expected))
+          err = err + 1;
+
+        $display("%2d | %b %b %b | %s",
+                 i, x_STRU, x_DF, x_BEH,
+                 ((x_STRU === expected) &&
+                  (x_DF === expected) &&
+                  (x_BEH === expected))
+                 ? "PASS" : "FAIL");
+
+      end
+      else begin
+
+        $display("%2d | %b %b %b | DON'T CARE",
+                 i, x_STRU, x_DF, x_BEH);
+
+      end
+
+    end
+
+    $display("Checked 10 valid BCD inputs");
+    $display("Errors = %0d", err);
+
+    $finish;
+
+  end
+
+endmodule
